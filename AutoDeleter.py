@@ -28,11 +28,11 @@
 #
 # ### USAGE ### #
 # After setup you shouldn't need to edit this file anymore.
-# There are only 2 ways you configure AutoDelete. Plex Collections and Tautulli Friendly Names
+# There are only 2 ways you configure AutoDelete. Plex Collections and Tautulli Friendly Names.
 # Add whichever tv show you want AutoDeleted to a Plex Collection, with the exact name of the friendly username as the user who watches the show.
 # E.g.
-# Your Plex user name is Johnny
-# Your Tautulli Friendly Name is John
+# Your Plex user name is Johnny.
+# Your Tautulli Friendly Name is John.
 # You want Game of Thrones to be removed after you have watched it.
 # In Plex, edit Game of Thrones, under Tags in the field Collections, add one called John.
 # Done, AutoDeleter will now remove Game of Thrones episodes after you have watched them.
