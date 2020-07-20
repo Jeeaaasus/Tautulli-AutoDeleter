@@ -27,9 +27,9 @@ The setting 'Allow Consecutive Notifications' in Tautulli needed to be on for me
 
 
 # SETUP
-Add your API key further down.
+Add your API key.
 
-If you have locations where you don't want files to be deleted, you can enter those also further down.
+If you have locations where you don't want files to be deleted, you can enter those also.
 
 In Tautulli, Add a Script Notification Agent.
 
