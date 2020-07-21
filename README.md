@@ -27,7 +27,7 @@ The setting 'Allow Consecutive Notifications' in Tautulli needed to be on for me
 
 
 # SETUP
-Add your API key.
+Add your API key to the sccipt.
 
 If you have locations where you don't want files to be deleted, you can enter those also.
 
@@ -35,9 +35,9 @@ In Tautulli, Add a Script Notification Agent.
 
 Under Triggers, enable Playback Stop.
 
-Under Arguments, add these Script Arguments in Playback Stop exactly in this order.
+Under Conditions, I suggest doing: 'Library Name' is 'names-of-your-tv-libraries' and 'Progress Percent' is greater than '79'.
 
-{title} {rating_key} {grandparent_rating_key} {user} {collections} {file} {progress_percent} {episode_num} {season_num}
+Under Arguments, add these Script Arguments in Playback Stop, exactly in this order: {title} {rating_key} {grandparent_rating_key} {user} {collections} {file} {progress_percent} {episode_num} {season_num}
 
 
 # USAGE
