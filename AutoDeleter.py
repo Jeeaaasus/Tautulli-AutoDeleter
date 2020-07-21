@@ -23,8 +23,8 @@
 # If you have locations where you don't want files to be deleted, you can enter those also further down.
 # In Tautulli, Add a Script Notification Agent.
 # Under Triggers, enable Playback Stop.
-# Under Arguments, add these Script Arguments in Playback Stop exactly in this order.
-# {title} {rating_key} {grandparent_rating_key} {user} {collections} {file} {progress_percent} {episode_num} {season_num}
+# Under Conditions, I suggest doing: 'Library Name' is 'names-of-your-tv-libraries' and 'Progress Percent' is greater than '79'.
+# Under Arguments, add these Script Arguments in Playback Stop, exactly in this order: {title} {rating_key} {grandparent_rating_key} {user} {collections} {file} {progress_percent} {episode_num} {season_num}
 #
 # ### USAGE ### #
 # After setup you shouldn't need to edit this file anymore.
@@ -153,17 +153,19 @@ print(f'AutoDeleter log:\ntitle: {media_title} - S{media_season:02}E{media_episo
 
 
 abandoned_delete_files()
-# Create a list of users 'watchers' by taking the list of Plex users from 'get_user_names()' and cross-matching it with the {collections} on the media item.
-watchers = list(set(collections).intersection(get_user_names()))
-# Only if, the user viewing the media item is in the list 'watchers'.
-if watchers.__contains__(friendly_username):
-    print(f'watchers: {watchers}')
-    # If all 'watchers' have watched this media item.
-    if all(get_history(user, episode_ratingkey) for user in watchers):
-        print(f'All watchers have seen this episode.')
-        delete_file()
-    # If not all 'watchers' have watched this media item.
-    else:
-        print(f'Not all watchers have seen this episode.')
+# Only if, the user viewing is on the list of Collections on the media item.
+if collections.__contains__(friendly_username):
+    # Create a list of users 'watchers' by taking the list of Plex users from 'get_user_names()' and cross-matching it with the {collections} on the media item.
+    watchers = list(set(collections).intersection(get_user_names()))
+    # Only if, the user viewing the media item is in the list 'watchers'.
+    if watchers.__contains__(friendly_username):
+        print(f'watchers: {watchers}')
+        # If all 'watchers' have watched this media item.
+        if all(get_history(user, episode_ratingkey) for user in watchers):
+            print(f'All watchers have seen this episode.')
+            delete_file()
+        # If not all 'watchers' have watched this media item.
+        else:
+            print(f'Not all watchers have seen this episode.')
 
 exit()
