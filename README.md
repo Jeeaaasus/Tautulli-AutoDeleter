@@ -5,11 +5,9 @@ Tautulli script to automatically remove watched tv.
 
 I was annoyed that all scripts made for this purpose was made kinda inconvenient, that you have to edit the script file with rating keys and strings of usernames.
 
-My version is much more convenient to use, after setup, it's configured by only editing shows in Plex.
+My version is much more convenient to use, after setup, it's configured by only editing shows in Plex, no text editing after setup.
 
 It works by using the Collections system Plex has and matching those against Tautulli users, this works with multiple users on the same show.
-
-No text editing after setup.
 
 This also has other benefits, one being able to simply search Plex for a username and see all shows that get automatically removed, neatly grouped per user.
 
