@@ -153,7 +153,7 @@ print(f'AutoDeleter log:\ntitle: {media_title} - S{media_season:02}E{media_episo
 
 abandoned_delete_files()
 # Only if, the user viewing is on the list of Collections on the media item.
-if collections.__contains__(friendly_username):
+if friendly_username in collections:
     # Create a list of users 'watchers' by taking the list of Plex users from 'get_user_names()' and cross-matching it with the {collections} on the media item.
     watchers = list(set(collections).intersection(get_user_names()))
     # Only if, the user viewing the media item is in the list 'watchers'.
