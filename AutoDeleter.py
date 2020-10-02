@@ -1,13 +1,18 @@
 # ### AutoDeleter ### #
 # https://github.com/Jeeaaasus/Tautulli-AutoDeleter
+# v1.1
+# Optimized the deletion logic.
+# Added logging for when an episode was not deleted to make it clear as to why.
+# Cleaned up some code.
 # v1.0
-# Initial commit
+# Initial commit.
 #
 # ### TL;DR ### #
 # Tautulli script to automatically remove watched tv.
 # I was annoyed that all scripts made for this purpose was made kinda inconvenient, that you have to edit the script file with rating keys and strings of usernames.
-# My version is much more convenient to use, after setup, it's configured by only editing shows in Plex, no text editing after setup.
+# My version is much more convenient to use, after setup, it's configured by only editing shows in Plex.
 # It works by using the Collections system Plex has and matching those against Tautulli users, this works with multiple users on the same show.
+# No text editing after setup.
 # This also has other benefits, one being able to simply search Plex for a username and see all shows that get automatically removed, neatly grouped per user.
 # One unfortunate drawback with this, is that Plex forgets about Collections when the show is removed. Which is why AutoDeleter doesn't remove S01E01 episodes.
 #
@@ -22,8 +27,10 @@
 # If you have locations where you don't want files to be deleted, you can enter those also further down.
 # In Tautulli, Add a Script Notification Agent.
 # Under Triggers, enable Playback Stop.
-# Under Conditions, I suggest doing: 'Library Name' is 'names-of-your-tv-libraries' and 'Progress Percent' is greater than '79'.
-# Under Arguments, add these Script Arguments in Playback Stop, exactly in this order: {title} {rating_key} {grandparent_rating_key} {user} {collections} {file} {progress_percent} {episode_num} {season_num}
+# Under Conditions, I suggest doing:
+# 'Library Name' is 'names-of-your-tv-libraries' and 'Progress Percent' is greater than '84'.
+# Under Arguments, add these Script Arguments in 'Playback Stop' exactly in this order:
+# {title} {rating_key} {grandparent_rating_key} {user} {collections} {file} {progress_percent} {episode_num} {season_num}
 #
 # ### USAGE ### #
 # After setup you shouldn't need to edit this file anymore.
@@ -48,7 +55,8 @@ tautulli_url = 'http://localhost:8181/'
 # Your Tautulli API key
 tautulli_apikey = 'YOUR-API-KEY-HERE'
 # Full path to folder(s) where you don't want files deleted (e.g. recycle bins)
-excluded_paths = ('/fake/path/to/recycle/', '/optional/second/path/')
+# Leave unedited if you don't want to use this feature
+excluded_paths = ('/example/fake/path/to/recycle/', '/example/optional/second/path/')
 
 media_title = argv[1]
 episode_ratingkey = argv[2]
@@ -104,8 +112,8 @@ def get_history(username, rating_key):
 
 def delete_file():
     # This function deletes the media.
-    # Only if, the media file exists & it's not the first episode of the first season & it's not located in any of the paths defined in 'excluded_paths'.
-    if path.isfile(file_location) and not (media_episode == 1 and media_season == 1) and not file_location.startswith(excluded_paths):
+    # Only if, the media file exists.
+    if path.isfile(file_location):
         # Create a variable 'delete_job_name', using 'episode_ratingkey' to give it a unique name, making it easy to reference later.
         delete_job_name = f'./AutoDeleter_{episode_ratingkey}.txt'
         # Create a file with the name 'delete_job_name', in the same location as this script, write the path of the media file 'file_location' that is going to be deleted to this file and close the file.
@@ -147,24 +155,40 @@ def abandoned_delete_files():
             remove(delete_job_name)
 
 
-# Print all arguments from Tautulli.
-print(f'AutoDeleter log:\ntitle: {media_title} - S{media_season:02}E{media_episode:02}\nepisode rating key: \'{episode_ratingkey}\'\nseries rating key: \'{grandparent_ratingkey}\'\ncollections: {collections}\nfile path: \'{file_location}\'\nviewer: \'{friendly_username}\'\nwatched: {watched_percent}%\n')
-
+# Print all arguments given to AutoDeleter from Tautulli.
+print(
+    f'AutoDeleter log:\n'
+    f'title: {media_title} - S{media_season:02}E{media_episode:02}\n'
+    f'episode rating key: \'{episode_ratingkey}\'\n'
+    f'series rating key: \'{grandparent_ratingkey}\'\n'
+    f'collections: {collections}\n'
+    f'file path: \'{file_location}\'\n'
+    f'viewer: \'{friendly_username}\'\n'
+    f'watched: {watched_percent}%\n'
+)
 
 abandoned_delete_files()
-# Only if, the user viewing is on the list of Collections on the media item.
-if friendly_username in collections:
-    # Create a list of users 'watchers' by taking the list of Plex users from 'get_user_names()' and cross-matching it with the {collections} on the media item.
+# Only if, the user watching is in the list of Collections on the episode & it's not the first episode of the first season & it's not located in any of the paths defined in 'excluded_paths'.
+if friendly_username in collections and not (media_episode == 1 and media_season == 1) and not file_location.startswith(excluded_paths):
+    # Create a list of users 'watchers' by taking the list of Plex users from 'get_user_names()' and cross-matching it with the {collections} on the episode.
     watchers = list(set(collections).intersection(get_user_names()))
-    # Only if, the user viewing the media item is in the list 'watchers'.
-    if watchers.__contains__(friendly_username):
-        print(f'watchers: {watchers}')
-        # If all 'watchers' have watched this media item.
-        if all(get_history(user, episode_ratingkey) for user in watchers):
-            print(f'All watchers have seen this episode.')
-            delete_file()
-        # If not all 'watchers' have watched this media item.
-        else:
-            print(f'Not all watchers have seen this episode.')
+    print(f'watchers: {watchers}')
+    # If all 'watchers' have watched this episode.
+    if all(get_history(user, episode_ratingkey) for user in watchers):
+        print(f'All watchers have seen this episode.')
+        delete_file()
+    # If not all 'watchers' have watched this episode.
+    else:
+        print(f'Deleted nothing.')
+        print(f'Not all watchers have seen this episode.')
+else:
+    # Print relevant information why the episode is not being deleted.
+    print(f'Deleted nothing.')
+    if not friendly_username in collections:
+        print(f'The user watching is not in the list of Collections on this episode.')
+    if (media_episode == 1 and media_season == 1):
+        print(f'This is the first episode of the first season.')
+    if file_location.startswith(excluded_paths):
+        print(f'This episode file is located within one of the excluded paths you have defined.')
 
 exit()
