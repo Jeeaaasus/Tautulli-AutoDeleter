@@ -33,9 +33,13 @@ In Tautulli, Add a Script Notification Agent.
 
 Under Triggers, enable Playback Stop.
 
-Under Conditions, I suggest doing: 'Library Name' is 'names-of-your-tv-libraries' and 'Progress Percent' is greater than '79'.
+Under Conditions, I suggest doing:
 
-Under Arguments, add these Script Arguments in Playback Stop, exactly in this order: {title} {rating_key} {grandparent_rating_key} {user} {collections} {file} {progress_percent} {episode_num} {season_num}
+'Library Name' is 'names-of-your-tv-libraries' and 'Progress Percent' is greater than '84'.
+
+Under Arguments, add these Script Arguments in Playback Stop, exactly in this order:
+
+{title} {rating_key} {grandparent_rating_key} {user} {collections} {file} {progress_percent} {episode_num} {season_num}
 
 
 # USAGE
