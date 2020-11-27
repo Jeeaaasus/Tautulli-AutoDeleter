@@ -17,9 +17,9 @@ One unfortunate drawback with this, is that Plex forgets about Collections when 
 # REQUIREMENTS
 Python 3+
 
-Tautulli and Plex MUST have the exact same paths to media files.
+Tautulli and Plex must have the EXACT same paths to media files.
 
-Collections MUST be named exactly the same as Tautulli 'friendly username' (NOT case-insensitive).
+Collections must be named EXACTLY the same as Tautulli 'friendly username' (NOT case-insensitive).
 
 The setting 'Allow Consecutive Notifications' in Tautulli needed to be on for me, otherwise there was very inconsistent behavior.
 
