@@ -1,11 +1,14 @@
 # ### AutoDeleter ### #
 # https://github.com/Jeeaaasus/Tautulli-AutoDeleter
+# v1.2
+# Fixed: friendly name can be different than username.
+# Small improvments to the 'get_history' logic.
 # v1.1
 # Optimized the deletion logic.
 # Added logging for when an episode was not deleted to make it clear as to why.
 # Cleaned up some code.
 # v1.0
-# Initial commit.
+# Initial release.
 #
 # ### TL;DR ### #
 # Tautulli script to automatically remove watched tv.
@@ -18,8 +21,8 @@
 #
 # ### REQUIREMENTS ### #
 # Python 3+
-# Tautulli and Plex MUST have the exact same paths to media files.
-# Collections MUST be named exactly the same as Tautulli 'friendly username' (NOT case-insensitive)
+# Tautulli and Plex must have the EXACT same paths to media files.
+# Collections must be named EXACTLY the same as Tautulli 'friendly username' (NOT case-insensitive)
 # The setting 'Allow Consecutive Notifications' in Tautulli needed to be on for me, otherwise there was very inconsistent behavior.
 #
 # ### SETUP ### #
@@ -89,13 +92,23 @@ def get_user_names():
 
 def get_history(username, rating_key):
     # This function returns 'True' if the provided 'friendly username' (username) has watched the provided media (rating_key).
+    try:
+        for user in (requests.get(tautulli_url.rstrip('/') + '/api/v2', params={'apikey': tautulli_apikey, 'cmd': 'get_user_names'})).json()['response']['data']:
+            if user['friendly_name'] == username:
+                user_id = user['user_id']
+
+    except Exception as error:
+        print(f'Tautulli API request failed: {error}.')
+
+    if user_id is None:
+        print(f'Tautulli API request failed: The user "{username}" does not exist.')
+
     payload = {
         'apikey': tautulli_apikey,
         'cmd': 'get_history',
-        'user': username,
+        'user_id': user_id,
         'rating_key': rating_key,
-        'start': 0,
-        'length': 50
+        'length': 100,
     }
 
     try:
@@ -103,8 +116,10 @@ def get_history(username, rating_key):
         response = r.json()
 
         response_data = response['response']['data']['data']
-        if [field['watched_status'] for field in response_data if field['watched_status'] == 1]:
+        if any([field['watched_status'] for field in response_data if field['watched_status'] == 1]):
             return True
+        else:
+            return False
 
     except Exception as error:
         print(f'Tautulli API request failed: {error}.')
