@@ -1,8 +1,10 @@
 # ### AutoDeleter ### #
 # https://github.com/Jeeaaasus/Tautulli-AutoDeleter
+# v1.3
+# New: deletes all media files instead of only the file that was played.
 # v1.2
 # Fixed: friendly name can be different than username.
-# Small improvments to the 'get_history' logic.
+# Small improvements to the 'get_history' logic.
 # v1.1
 # Optimized the deletion logic.
 # Added logging for when an episode was not deleted to make it clear as to why.
@@ -61,6 +63,7 @@ tautulli_apikey = 'YOUR-API-KEY-HERE'
 # Leave unedited if you don't want to use this feature
 excluded_paths = ('/example/fake/path/to/recycle/', '/example/optional/second/path/')
 
+api_path = '/api/v2'
 media_title = argv[1]
 episode_ratingkey = argv[2]
 grandparent_ratingkey = argv[3]
@@ -80,7 +83,7 @@ def get_user_names():
     }
 
     try:
-        r = requests.get(tautulli_url.rstrip('/') + '/api/v2', params=payload)
+        r = requests.get(tautulli_url.rstrip('/') + api_path, params=payload)
         response = r.json()
 
         response_data = response['response']['data']
@@ -93,7 +96,7 @@ def get_user_names():
 def get_history(username, rating_key):
     # This function returns 'True' if the provided 'friendly username' (username) has watched the provided media (rating_key).
     try:
-        for user in (requests.get(tautulli_url.rstrip('/') + '/api/v2', params={'apikey': tautulli_apikey, 'cmd': 'get_user_names'})).json()['response']['data']:
+        for user in (requests.get(tautulli_url.rstrip('/') + api_path, params={'apikey': tautulli_apikey, 'cmd': 'get_user_names'})).json()['response']['data']:
             if user['friendly_name'] == username:
                 user_id = user['user_id']
 
@@ -112,7 +115,7 @@ def get_history(username, rating_key):
     }
 
     try:
-        r = requests.get(tautulli_url.rstrip('/') + '/api/v2', params=payload)
+        r = requests.get(tautulli_url.rstrip('/') + api_path, params=payload)
         response = r.json()
 
         response_data = response['response']['data']['data']
@@ -125,21 +128,49 @@ def get_history(username, rating_key):
         print(f'Tautulli API request failed: {error}.')
 
 
-def delete_file():
+def get_media_paths(rating_key):
+    # This function returns all the file paths of the provided media (rating_key).
+    payload = {
+        'apikey': tautulli_apikey,
+        'cmd': 'get_metadata',
+        'rating_key': rating_key,
+    }
+
+    try:
+        r = requests.get(tautulli_url.rstrip('/') + api_path, params=payload)
+        response = r.json()
+
+        response_data = response['response']['data']['media_info']
+        list = []
+        for field in response_data:
+            list.append(field['parts'][0]['file'])
+        return list
+
+    except Exception as error:
+        print(f'Tautulli API request failed: {error}.')
+
+
+def delete_file(media_path):
     # This function deletes the media.
     # Only if, the media file exists.
-    if path.isfile(file_location):
+    if path.isfile(media_path):
         # Create a variable 'delete_job_name', using 'episode_ratingkey' to give it a unique name, making it easy to reference later.
         delete_job_name = f'./AutoDeleter_{episode_ratingkey}.txt'
-        # Create a file with the name 'delete_job_name', in the same location as this script, write the path of the media file 'file_location' that is going to be deleted to this file and close the file.
-        delete_job = open(delete_job_name, 'w'); delete_job.write(f'{file_location}'); delete_job.close()
+        # If the file name already exists, find one that does not exist.
+        while True:
+            if not path.isfile(delete_job_name):
+                break
+            n = + 1
+            delete_job_name = f'./AutoDeleter_{episode_ratingkey}_{n}.txt'
+        # Create a file with the name 'delete_job_name', in the same location as this script, write the path of the media file 'media_path' that is going to be deleted to this file and close the file.
+        delete_job = open(delete_job_name, 'w'); delete_job.write(f'{media_path}'); delete_job.close()
         # Wait 10 minutes.
         sleep((60 * 10))
-        # If the media file 'file_location' still exists.
-        if path.isfile(file_location):
+        # If the media file 'media_path' still exists.
+        if path.isfile(media_path):
             # Delete the media file.
-            remove(file_location)
-            print(f'Deleted.')
+            remove(media_path)
+            print(f'One media file deleted.')
         # If the media file does not exists anymore.
         else:
             print(f'Error: file doesn\'t exist.')
@@ -183,15 +214,22 @@ print(
 )
 
 abandoned_delete_files()
-# Only if, the user watching is in the list of Collections on the episode & it's not the first episode of the first season & it's not located in any of the paths defined in 'excluded_paths'.
-if friendly_username in collections and not (media_episode == 1 and media_season == 1) and not file_location.startswith(excluded_paths):
+# Only if, the user watching is in the list of Collections on the episode & it's not the first episode of the first season.
+if friendly_username in collections and not (media_episode == 1 and media_season == 1):
     # Create a list of users 'watchers' by taking the list of Plex users from 'get_user_names()' and cross-matching it with the {collections} on the episode.
     watchers = list(set(collections).intersection(get_user_names()))
     print(f'watchers: {watchers}')
     # If all 'watchers' have watched this episode.
     if all(get_history(user, episode_ratingkey) for user in watchers):
         print(f'All watchers have seen this episode.')
-        delete_file()
+        # For every media file.
+        for media_path in get_media_paths(episode_ratingkey):
+            # If the media file is not located in any of the paths defined in 'excluded_paths'
+            if not media_path.startswith(excluded_paths):
+                # Delete media file
+                delete_file(media_path)
+            else:
+                print(f'One media file not deleted because it is located within a excluded path.')
     # If not all 'watchers' have watched this episode.
     else:
         print(f'Deleted nothing.')
@@ -199,11 +237,9 @@ if friendly_username in collections and not (media_episode == 1 and media_season
 else:
     # Print relevant information why the episode is not being deleted.
     print(f'Deleted nothing.')
-    if not friendly_username in collections:
+    if friendly_username not in collections:
         print(f'The user watching is not in the list of Collections on this episode.')
-    if (media_episode == 1 and media_season == 1):
+    if media_episode == 1 and media_season == 1:
         print(f'This is the first episode of the first season.')
-    if file_location.startswith(excluded_paths):
-        print(f'This episode file is located within one of the excluded paths you have defined.')
 
 exit()
