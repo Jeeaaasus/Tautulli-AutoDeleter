@@ -229,7 +229,7 @@ if friendly_username in collections and not (media_episode == 1 and media_season
                 # Delete media file
                 delete_file(media_path)
             else:
-                print(f'One media file not deleted because it is located within a excluded path.')
+                print(f'One media file not deleted because it is located within an excluded path.')
     # If not all 'watchers' have watched this episode.
     else:
         print(f'Deleted nothing.')
