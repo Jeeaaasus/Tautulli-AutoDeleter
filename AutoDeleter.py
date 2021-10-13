@@ -1,5 +1,8 @@
 # ### AutoDeleter ### #
 # https://github.com/Jeeaaasus/Tautulli-AutoDeleter
+# v1.3.1
+# Fixed: A rare race condition by adding a small delay to make sure Tautulli has time to log the viewing before checking watch history on the media.
+# Small improvements to code clarity.
 # v1.3
 # New: deletes all media files instead of only the file that was played.
 # v1.2
@@ -213,33 +216,36 @@ print(
     f'watched: {watched_percent}%\n'
 )
 
-abandoned_delete_files()
-# Only if, the user watching is in the list of Collections on the episode & it's not the first episode of the first season.
-if friendly_username in collections and not (media_episode == 1 and media_season == 1):
-    # Create a list of users 'watchers' by taking the list of Plex users from 'get_user_names()' and cross-matching it with the {collections} on the episode.
-    watchers = list(set(collections).intersection(get_user_names()))
-    print(f'watchers: {watchers}')
-    # If all 'watchers' have watched this episode.
-    if all(get_history(user, episode_ratingkey) for user in watchers):
-        print(f'All watchers have seen this episode.')
-        # For every media file.
-        for media_path in get_media_paths(episode_ratingkey):
-            # If the media file is not located in any of the paths defined in 'excluded_paths'
-            if not media_path.startswith(excluded_paths):
-                # Delete media file
-                delete_file(media_path)
-            else:
-                print(f'One media file not deleted because it is located within an excluded path.')
-    # If not all 'watchers' have watched this episode.
+if __name__ == '__main__':
+    abandoned_delete_files()
+    # Only if, the user watching is in the list of Collections on the episode & it's not the first episode of the first season.
+    if friendly_username in collections and not (media_episode == 1 and media_season == 1):
+        # Create a list of users 'watchers' by taking the list of Plex users from 'get_user_names()' and cross-matching it with the {collections} on the episode.
+        watchers = list(set(collections).intersection(get_user_names()))
+        print(f'watchers: {watchers}')
+        # Small delay to make sure Tautulli has time to log the viewing.
+        sleep(10)
+        # If all 'watchers' have watched this episode.
+        if all(get_history(user, episode_ratingkey) for user in watchers):
+            print(f'All watchers have seen this episode.')
+            # For every media file.
+            for media_path in get_media_paths(episode_ratingkey):
+                # If the media file is not located in any of the paths defined in 'excluded_paths'
+                if not media_path.startswith(excluded_paths):
+                    # Delete media file
+                    delete_file(media_path)
+                else:
+                    print(f'One media file not deleted because it is located within a excluded path.')
+        # If not all 'watchers' have watched this episode.
+        else:
+            print(f'Deleted nothing.')
+            print(f'Not all watchers have seen this episode.')
     else:
+        # Print relevant information why the episode is not being deleted.
         print(f'Deleted nothing.')
-        print(f'Not all watchers have seen this episode.')
-else:
-    # Print relevant information why the episode is not being deleted.
-    print(f'Deleted nothing.')
-    if friendly_username not in collections:
-        print(f'The user watching is not in the list of Collections on this episode.')
-    if media_episode == 1 and media_season == 1:
-        print(f'This is the first episode of the first season.')
+        if friendly_username not in collections:
+            print(f'The user watching is not in the list of Collections on this episode.')
+        if media_episode == 1 and media_season == 1:
+            print(f'This is the first episode of the first season.')
 
-exit()
+    exit()
