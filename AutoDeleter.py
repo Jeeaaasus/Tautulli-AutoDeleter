@@ -1,5 +1,7 @@
 # ### AutoDeleter ### #
 # https://github.com/Jeeaaasus/Tautulli-AutoDeleter
+# v1.3.2
+# Small improvements to code clarity.
 # v1.3.1
 # Fixed: A rare race condition by adding a small delay to make sure Tautulli has time to log the viewing before checking watch history on the media.
 # Small improvements to code clarity.
@@ -57,26 +59,28 @@ from os import path, remove
 from time import sleep, time
 from glob import glob
 
-# ### USER CONFIGURED VARIABLES ### #
-# Your Tautulli URL
-tautulli_url = 'http://localhost:8181/'
-# Your Tautulli API key
-tautulli_apikey = 'YOUR-API-KEY-HERE'
-# Full path to folder(s) where you don't want files deleted (e.g. recycle bins)
-# Leave unedited if you don't want to use this feature
-excluded_paths = ('/example/fake/path/to/recycle/', '/example/optional/second/path/')
+# Initialize variables
+if __name__ == '__main__':
+    # ### USER CONFIGURED VARIABLES ### #
+    # Your Tautulli URL
+    tautulli_url = 'http://localhost:8181/'
+    # Your Tautulli API key
+    tautulli_apikey = 'YOUR-API-KEY-HERE'
+    # Full path to folder(s) where you don't want files deleted (e.g. recycle bins)
+    # Leave unedited if you don't want to use this feature
+    excluded_paths = ('/example/fake/path/to/recycle/', '/example/optional/second/path/')
 
-api_path = '/api/v2'
-media_title = argv[1]
-episode_ratingkey = argv[2]
-grandparent_ratingkey = argv[3]
-friendly_username = argv[4]
-collections = argv[5].split(', ')
-file_location = argv[6]
-watched_percent = int(argv[7])
-media_episode = int(argv[8])
-media_season = int(argv[9])
-
+    # ### SYSTEM VARIABLES ### #
+    api_path = '/api/v2'
+    media_title = argv[1]
+    episode_ratingkey = argv[2]
+    grandparent_ratingkey = argv[3]
+    friendly_username = argv[4]
+    collections = argv[5].split(', ')
+    file_location = argv[6]
+    watched_percent = int(argv[7])
+    media_episode = int(argv[8])
+    media_season = int(argv[9])
 
 def get_user_names():
     # this function returns all 'friendly usernames' from tautulli in the form of a list.
@@ -184,7 +188,7 @@ def delete_file(media_path):
 
 
 def abandoned_delete_files():
-    # This function looks for any leftover 'delete_job_name' files created by 'delete_file()' and finishes the removal process.
+    # This function looks for any leftover 'delete_job_name' files created by the 'delete_file()' function and finishes the removal process.
     # Once per each 'delete_job_name' file.
     for delete_job_name in (glob('./AutoDeleter_*.txt')):
         # Only if, the 'delete_job_name' file was created more than 20 minutes.
@@ -204,19 +208,20 @@ def abandoned_delete_files():
             remove(delete_job_name)
 
 
-# Print all arguments given to AutoDeleter from Tautulli.
-print(
-    f'AutoDeleter log:\n'
-    f'title: {media_title} - S{media_season:02}E{media_episode:02}\n'
-    f'episode rating key: \'{episode_ratingkey}\'\n'
-    f'series rating key: \'{grandparent_ratingkey}\'\n'
-    f'collections: {collections}\n'
-    f'file path: \'{file_location}\'\n'
-    f'viewer: \'{friendly_username}\'\n'
-    f'watched: {watched_percent}%\n'
-)
-
+# Start
 if __name__ == '__main__':
+    # Print all arguments given to AutoDeleter from Tautulli.
+    print(
+        f'AutoDeleter log:\n'
+        f'title: {media_title} - S{media_season:02}E{media_episode:02}\n'
+        f'episode rating key: \'{episode_ratingkey}\'\n'
+        f'series rating key: \'{grandparent_ratingkey}\'\n'
+        f'collections: {collections}\n'
+        f'file path: \'{file_location}\'\n'
+        f'viewer: \'{friendly_username}\'\n'
+        f'watched: {watched_percent}%\n'
+    )
+
     abandoned_delete_files()
     # Only if, the user watching is in the list of Collections on the episode & it's not the first episode of the first season.
     if friendly_username in collections and not (media_episode == 1 and media_season == 1):
