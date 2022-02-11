@@ -21,7 +21,7 @@ Tautulli and Plex must have the EXACT same paths to media files.
 
 Collections must be named EXACTLY the same as Tautulli 'friendly username' (NOT case-insensitive).
 
-The setting 'Allow Consecutive Notifications' in Tautulli needed to be on for me, otherwise there was very inconsistent behavior.
+The setting 'Allow Playback Stop Notifications Exceeding Watched Percent' in Tautulli needed to be on for me, Otherwise, the behavior was very inconsistent.
 
 
 # SETUP
