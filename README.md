@@ -19,9 +19,9 @@ Python 3+
 
 Tautulli and Plex must have the EXACT same paths to media files.
 
-Collections must be named EXACTLY the same as Tautulli 'friendly username' (NOT case-insensitive).
+Collections must be named EXACTLY the same as Tautulli 'friendly username'. (NOT case-insensitive)
 
-The setting 'Allow Playback Stop Notifications Exceeding Watched Percent' in Tautulli needed to be on for me, Otherwise, the behavior was very inconsistent.
+'Allow Playback Stop Notifications Exceeding Watched Percent' neededs to be enabled. (notify_consecutive = 1)
 
 
 # SETUP
