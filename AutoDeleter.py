@@ -1,9 +1,11 @@
 # ### AutoDeleter ### #
 # https://github.com/Jeeaaasus/Tautulli-AutoDeleter
+# v1.4
+# New: AutoDeleter will tell Sonarr to rescan library files after deleting a media file.
 # v1.3.2
 # Small improvements to code clarity.
 # v1.3.1
-# Fixed: A rare race condition by adding a small delay to make sure Tautulli has time to log the viewing before checking watch history on the media.
+# Fixed: a rare race condition by adding a small delay to make sure Tautulli has time to log the viewing before checking watch history on the media.
 # Small improvements to code clarity.
 # v1.3
 # New: deletes all media files instead of only the file that was played.
@@ -54,6 +56,7 @@
 # Done, AutoDeleter will now remove Game of Thrones episodes after you have watched them.
 #
 import requests
+import json
 from sys import argv
 from os import path, remove
 from time import sleep, time
@@ -65,10 +68,16 @@ if __name__ == '__main__':
     # Your Tautulli URL
     tautulli_url = 'http://localhost:8181/'
     # Your Tautulli API key
-    tautulli_apikey = 'YOUR-API-KEY-HERE'
+    tautulli_apikey = 'YOUR-TAUTULLI-API-KEY-HERE'
     # Full path to folder(s) where you don't want files deleted (e.g. recycle bins)
     # Leave unedited if you don't want to use this feature
     excluded_paths = ('/example/fake/path/to/recycle/', '/example/optional/second/path/')
+    # AutoDeleter will tell Sonarr to rescan library files after deleting a media file.
+    # Leave unedited if you don't want to use this feature
+    # Your Sonarr URL
+    sonarr_url = 'http://localhost:8989/'
+    # Your Sonarr API key
+    sonarr_apikey = 'YOUR-SONARR-API-KEY-HERE'
 
     # ### SYSTEM VARIABLES ### #
     api_path = '/api/v2'
@@ -81,6 +90,7 @@ if __name__ == '__main__':
     watched_percent = int(argv[7])
     media_episode = int(argv[8])
     media_season = int(argv[9])
+
 
 def get_user_names():
     # this function returns all 'friendly usernames' from tautulli in the form of a list.
@@ -157,6 +167,15 @@ def get_media_paths(rating_key):
         print(f'Tautulli API request failed: {error}.')
 
 
+def sonarr_command(command):
+    # this function posts a request to Sonarr to execute a command.
+    try:
+        requests.post(sonarr_url.rstrip('/') + '/api/command', headers={'X-Api-Key': sonarr_apikey}, data=json.dumps({'name': command}))
+
+    except Exception as error:
+        print(f'Sonarr API request failed: {error}.')
+
+
 def delete_file(media_path):
     # This function deletes the media.
     # Only if, the media file exists.
@@ -177,6 +196,10 @@ def delete_file(media_path):
         if path.isfile(media_path):
             # Delete the media file.
             remove(media_path)
+            # If Sonarr is configured.
+            if sonarr_apikey != 'YOUR-SONARR-API-KEY-HERE':
+                # Have Sonarr to rescan library files.
+                sonarr_command('RescanSeries')
             print(f'One media file deleted.')
         # If the media file does not exists anymore.
         else:
@@ -191,7 +214,7 @@ def abandoned_delete_files():
     # This function looks for any leftover 'delete_job_name' files created by the 'delete_file()' function and finishes the removal process.
     # Once per each 'delete_job_name' file.
     for delete_job_name in (glob('./AutoDeleter_*.txt')):
-        # Only if, the 'delete_job_name' file was created more than 20 minutes.
+        # Only if, the 'delete_job_name' file was created more than 20 minutes ago.
         if (time() - path.getctime(delete_job_name)) / 60 > 20:
             # Open the leftover 'delete_job_name' file, save the contents to 'delete_job_target' and close the file.
             delete_job = open(delete_job_name, 'r'); delete_job_target = delete_job.read(); delete_job.close()
@@ -200,6 +223,10 @@ def abandoned_delete_files():
             if path.isfile(delete_job_target):
                 # Delete the media file 'delete_job_target'.
                 remove(delete_job_target)
+                # If Sonarr is configured.
+                if sonarr_apikey != 'YOUR-SONARR-API-KEY-HERE':
+                    # Have Sonarr to rescan library files.
+                    sonarr_command('RescanSeries')
                 print(f'Leftover media file deleted.')
             # If the media file does not exists anymore.
             else:
@@ -254,3 +281,4 @@ if __name__ == '__main__':
             print(f'This is the first episode of the first season.')
 
     exit()
+
